@@ -1,9 +1,16 @@
+/*
+ * Meant to be a simple mediaproxy.
+ * Developed by Md. Rakib Hassan Mullick <rakib.mullick@gmail.com>
+ * Released under GPLv2 or later.
+ */
 
 #include "sockint.h"
 #include <poll.h>
 #include <string.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
-#define	NRSERV	10
+#define	NRSERV	1024
 
 struct servinfo {
 	struct sockaddr_in saddr, caddr[2];
@@ -18,7 +25,8 @@ int main(void)
 
 	memset(&pfd, 0, sizeof(struct pollfd) * NRSERV);
 	for (i = 0 ; i < NRSERV; i++) {
-		udp_open(&fd[i], &serv[i].saddr, 7000+i);
+		if (udp_open(&fd[i], &serv[i].saddr, 10000+i) == -1)
+			continue;
 		memset(&serv[i].caddr[0], 0, sizeof(struct sockaddr_in));
 		memset(&serv[i].caddr[1], 0, sizeof(struct sockaddr_in));
 		serv[i].flags = 0;

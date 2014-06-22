@@ -7,6 +7,6 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 
-void udp_open(int *fd, struct sockaddr_in *addr, int port);
+int udp_open(int *fd, struct sockaddr_in *addr, int port);
 
 #endif

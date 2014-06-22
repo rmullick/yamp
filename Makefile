@@ -7,5 +7,5 @@ sockint:
 	gcc -c sockint.c
 
 clean:
-	rm -rf *o prox
+	rm -rf *o *~ prox
 

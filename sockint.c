@@ -14,7 +14,7 @@ void nonblock(int *fd)
  * @addr - sockaddr 
  * @port - where to bind
  */
-void udp_open(int *fd, struct sockaddr_in *addr, int port)
+int udp_open(int *fd, struct sockaddr_in *addr, int port)
 {
 	int yes = 0;
 
@@ -25,7 +25,7 @@ void udp_open(int *fd, struct sockaddr_in *addr, int port)
 	*fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (*fd < 0) {
 		fprintf(stderr,"Failed to create socket, errno: %d\n", errno);
-		return;
+		return -1;
 	}
 
 	nonblock(fd);
@@ -33,12 +33,13 @@ void udp_open(int *fd, struct sockaddr_in *addr, int port)
 	if (setsockopt(*fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) {
 		fprintf(stderr,"setsockopt() failed.\n");
 		close(*fd);
-		return;
+		return -1;
 	}
 
 	if (bind(*fd, (struct sockaddr *) addr, sizeof(struct sockaddr_in)) < 0) {
 		fprintf(stderr,"bind() failed %d.\n", errno);
 		close(*fd);
-		return;
+		return -1;
 	}
+	return 0;
 }
