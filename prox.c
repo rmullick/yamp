@@ -1,16 +1,11 @@
 /*
  * Meant to be a simple mediaproxy.
  * Developed by Md. Rakib Hassan Mullick <rakib.mullick@gmail.com>
- * Released under GPLv2 or later.
+ * Licensed under GPLv2 or later.
  */
 
 #include "sockint.h"
-#include <poll.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#define	NRSERV	1024
+#include "thread.h"
 
 struct servinfo {
 	struct sockaddr_in saddr, caddr[2];
@@ -19,13 +14,19 @@ struct servinfo {
 
 int main(void)
 {
-	int fd[10], ret, l = sizeof(struct sockaddr), i;
+	int fd[NRSERV], ret, l = sizeof(struct sockaddr), i;
 	struct servinfo serv[NRSERV];
 	struct pollfd pfd[NRSERV];
 
-	memset(&pfd, 0, sizeof(struct pollfd) * NRSERV);
+	memset(&pfd, 0, sizeof(struct pollfd) * (NRSERV));
+
+	if (prepare_helper()) {
+		fprintf(stderr,"Failed to create daemon thread\n");
+		goto exit;
+	}
+
 	for (i = 0 ; i < NRSERV; i++) {
-		if (udp_open(&fd[i], &serv[i].saddr, 10000+i) == -1)
+		if (udp_open(&fd[i], &serv[i].saddr, 7000+i) == -1)
 			continue;
 		memset(&serv[i].caddr[0], 0, sizeof(struct sockaddr_in));
 		memset(&serv[i].caddr[1], 0, sizeof(struct sockaddr_in));
@@ -43,7 +44,7 @@ int main(void)
 		if (ret <= 0)
 			continue;
 		else {
-		      for (x = 0; x < 10; x++) {
+		      for (x = 0; x < NRSERV; x++) {
 			memset(buf, 0, 100);
 			memset(&tmpclient, 0, sizeof(tmpclient));
 			if (pfd[x].revents & POLLIN) {	// incoming data
@@ -68,7 +69,6 @@ int main(void)
 					}
 
 					if (serv[x].flags == 2) {
-						//printf("both client found\n");
 					   if ((serv[x].caddr[0].sin_port == tmpclient.sin_port) && (serv[x].caddr[0].sin_addr.s_addr == tmpclient.sin_addr.s_addr))
 							len = sendto(fd[x], buf, len, MSG_DONTWAIT, (const struct sockaddr*)&serv[x].caddr[1], l);
 							if (len < 1)
@@ -83,4 +83,5 @@ int main(void)
 		     }
 		}
 	}
+exit:;
 }
