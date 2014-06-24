@@ -1,28 +1,52 @@
-//#include <sys/socket.h>
-//include <netinet/in.h>
 #include "thread.h"
 #include "sockint.h"
-#include <errno.h>
 
-static int startport = 7000, endport = 7010, freeport = 7000;
+
+//static int startport = 7000, endport = 7010, freeport = 7000;
 
 void release_port(char *port)
 {
-	freeport = atoi(port);
-	fprintf(stdout,"Port %d released\n", freeport);
+	int idx;
+
+	idx = freeidx;
+
+	/*while (freeports[idx] != -1)
+		idx++;*/
+
+	freeports[freeidx] = atoi(port);
+
+	fprintf(stdout,"Port %d released\n", freeports[idx]);
 }
 
 int get_port(void)
 {
-	freeport++;
-	return freeport-1;
+	int preidx, port;
+
+	preidx = freeidx;
+	if (freeports[freeidx] != -1) {
+		port = freeports[preidx];
+		freeports[preidx] = -1;
+		freeidx++;
+
+		return port;
+	}
+		
+	while (freeports[preidx] == -1)
+		preidx++;
+
+	freeidx = preidx; freeidx++;
+
+	port = freeports[preidx];
+	freeports[preidx] = -1;		/* Not avaiable anymore */
+
+	return freeports[preidx];
 }
 
 inline void handle_command(int tfd)
 {
 	int l = sizeof(struct sockaddr_in), len = 0, port, repeat = 0;
 	struct sockaddr_in taddr;
-	char buf[15] = {0}, newbuf[15] = "port:";
+	char buf[15] = {0}, newbuf[15] = "port:0000000000";
 
 	len = recvfrom(tfd, buf, 15, MSG_WAITALL, (struct sockaddr*)&taddr, (socklen_t *) &l);
 	if (len <= 0)
@@ -41,14 +65,14 @@ inline void handle_command(int tfd)
 		if (buf[0] == 'G' || buf[0] == 'g') {
 			port = get_port();
 			sprintf(&newbuf[5],"%d", port);
-			newbuf[9] = 0; pass = 1;
+			pass = 1;
 		} else
 			newbuf[0] = 0;
 
 		repeat = 0;
 		if (pass) {
 			do {
-				len = sendto(tfd, "port:7000 ", 10, MSG_DONTWAIT, (const struct sockaddr*)&taddr, (socklen_t) l);
+				len = sendto(tfd, newbuf, 10, MSG_DONTWAIT, (const struct sockaddr*)&taddr, (socklen_t) l);
 				if (len <= 0) {
 					//fprintf(stdout,"failed to sent: %d\n", errno);
 					repeat++;
@@ -72,10 +96,6 @@ static void *helper_routine(void *info)
 
 	memset(&tpfd, 0, sizeof(struct pollfd));
 	tpfd.fd = daemonfd; tpfd.events = POLLIN;
-	/*sigset_t set;
-	sigemptyset(&set);
-	pthread_sigmask(SIG_UNBLOCK, &set, NULL);
-	sigaddset(&set, SIGUSR1);*/
 
 	for(;;) {
 		ret = poll(&tpfd, 1, -1);
@@ -83,23 +103,9 @@ static void *helper_routine(void *info)
 			continue;
 		else {
 			if (tpfd.revents & POLLIN) {
-				//if (!pthread_mutex_trylock(&helper_mutex)) {
 					handle_command(daemonfd);
-					//pthread_mutex_unlock(&helper_mutex);
-				//}
 			}
 		}
-		/*pthread_sigmask(SIG_BLOCK, &set, NULL);
-		ret = sigwait(&set, &signal);
-		if (ret)
-			continue;
-
-		if (signal == SIGUSR1) {
-			if (!pthread_mutex_trylock(&helper_mutex)) {
-				handle_command();
-				pthread_mutex_unlock(&helper_mutex);
-			}
-		}*/
 	}
 }
 
