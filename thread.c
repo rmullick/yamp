@@ -1,45 +1,58 @@
 #include "thread.h"
 #include "sockint.h"
-
-
-//static int startport = 7000, endport = 7010, freeport = 7000;
+#include <signal.h>
 
 void release_port(char *port)
 {
 	int idx;
 
-	idx = freeidx;
+	/* as soon as some port is available that means we're ready to take calls */
+	if (active > portrange)
+		active = portrange-1;
+	else
+		active--;
 
-	/*while (freeports[idx] != -1)
-		idx++;*/
+	idx = 0;
+	while ((freeports[idx] != -1) && idx <= portrange)
+		idx++;
 
-	freeports[freeidx] = atoi(port);
+	/* this never shouldn't happen ! */
+	if (idx == portrange && freeports[idx] != -1) {
+		fprintf(stderr, "Failed to release port.\n");
+		return 
+	}
 
-	fprintf(stdout,"Port %d released\n", freeports[idx]);
+	freeports[idx] = atoi(port);
+	freeidx = idx;			/* freeidx is a sortof cache-ing ports */
+
+	fprintf(stdout,"Port %s released\n", port);
 }
 
 int get_port(void)
 {
 	int preidx, port;
 
+	if (active >= portrange)
+		return -1;
+	else
+		active++;
+
 	preidx = freeidx;
 	if (freeports[freeidx] != -1) {
 		port = freeports[preidx];
 		freeports[preidx] = -1;
-		freeidx++;
-
 		return port;
 	}
-		
+	preidx = 0;
 	while (freeports[preidx] == -1)
 		preidx++;
 
-	freeidx = preidx; freeidx++;
+	freeidx = preidx;
 
 	port = freeports[preidx];
 	freeports[preidx] = -1;		/* Not avaiable anymore */
 
-	return freeports[preidx];
+	return port;
 }
 
 inline void handle_command(int tfd)
@@ -48,12 +61,10 @@ inline void handle_command(int tfd)
 	struct sockaddr_in taddr;
 	char buf[15] = {0}, newbuf[15] = "port:0000000000";
 
-	len = recvfrom(tfd, buf, 15, MSG_WAITALL, (struct sockaddr*)&taddr, (socklen_t *) &l);
+	len = recvfrom(tfd, buf, 15, 0, (struct sockaddr*)&taddr, (socklen_t *) &l);
 	if (len <= 0)
 		return;
-	//fprintf(stdout,"Got data: of length: %d from port: %u addr: %s\n", len, taddr.sin_port, inet_ntoa(taddr.sin_addr));
-
-	if (len > 0) {
+	else {
 		int pass = 0;
 		buf[len] = 0;
 
@@ -64,8 +75,10 @@ inline void handle_command(int tfd)
 
 		if (buf[0] == 'G' || buf[0] == 'g') {
 			port = get_port();
-			sprintf(&newbuf[5],"%d", port);
-			pass = 1;
+			if (port != -1) {
+				sprintf(&newbuf[5],"%d", port);
+				pass = 1;
+			}
 		} else
 			newbuf[0] = 0;
 
@@ -122,4 +135,3 @@ int prepare_helper(void)
 
 	return 0;
 }
-
