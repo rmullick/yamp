@@ -1,0 +1,21 @@
+			Yate Another MediaProxy (YAMP)
+		    =====================================
+
+Yate Another MediaProxy, YAMP for short, is RTPproxy alike software intend to
+work with Kamailio (or any other flavour OpenSER available, wasn't tested with
+any other OpenSEr flavours except Kamailio, ATM). To fully make it working a
+module in Kamailio is needed (currently it's named as gplexrtp). gplexrtp
+communicates with YAMP via network stack, Local Communication isn't available
+at the moment.
+
+YAMP uses single port for proxying rtp media. Currently, it don't try to check
+whether it's a real rtp media or not. Part of it's working depends on the gplexrtp
+module.
+
+To compile simply execute "make". To compile properly it'd require libpthread,
+make sure it's installed. To run:
+
+	./yamp -s startport -e endport
+
+by using "-s" and "-e" option, a portrange is defined. For ex, if you want to
+use port 30000-35000, then do: "./yamp -s 30000 -e 35000".

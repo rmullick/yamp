@@ -2,6 +2,11 @@
 #include "sockint.h"
 #include <signal.h>
 
+/*
+ * Currently to port acquire/release is done via linear traversing over
+ * the free list. So, if no of portrange is big, it might suffer.
+ * Might need attention for that purpose.
+ */
 void release_port(char *port)
 {
 	int idx;
@@ -19,7 +24,7 @@ void release_port(char *port)
 	/* this never shouldn't happen ! */
 	if (idx == portrange && freeports[idx] != -1) {
 		fprintf(stderr, "Failed to release port.\n");
-		return 
+		return;
 	}
 
 	freeports[idx] = atoi(port);

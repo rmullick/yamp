@@ -1,4 +1,4 @@
-all:	prox
+all:	yamp
 
 thread: 
 	gcc -c thread.c
@@ -6,9 +6,9 @@ thread:
 sockint: 
 	gcc -c sockint.c
 
-prox:   sockint.o thread.o
-	gcc -g3 -o prox thread.o sockint.o prox.c -lpthread
+yamp:   sockint.o thread.o
+	gcc -g3 -o yamp thread.o sockint.o yamp.c -lpthread
 
 clean:
-	rm -rf *o *~ prox
+	rm -rf *o *~ yamp
 
