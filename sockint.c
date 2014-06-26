@@ -1,5 +1,4 @@
 #include "sockint.h"
-#include <errno.h>
 
 void nonblock(int *fd)
 {
@@ -30,7 +29,6 @@ int udp_open(int *fd, struct sockaddr_in *addr, int port)
 	}
 
 	nonblock(fd);
-
 	if (setsockopt(*fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) < 0) {
 		fprintf(stderr,"setsockopt() failed.\n");
 		close(*fd);
@@ -42,6 +40,7 @@ int udp_open(int *fd, struct sockaddr_in *addr, int port)
 		close(*fd);
 		return -1;
 	}
+
 	return 0;
 }
 

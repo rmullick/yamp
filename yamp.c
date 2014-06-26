@@ -76,7 +76,6 @@ void inthandler(int sig)
 	exit(1);
 }
 
-
 int main(int argc, char *argv[])
 {
 	int ret, l = sizeof(struct sockaddr), i, diff = 0, opt;
@@ -102,7 +101,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	//printf("startport - endport: %u, %u\n", startport, endport);
 	if (endport >= startport) 
 		diff = (endport - startport);
 	else
@@ -121,7 +119,7 @@ int main(int argc, char *argv[])
 	memset(fdp, 0, sizeof(*fdp));
 	memset(pfdp, 0, sizeof(*pfdp));
 
-	sinfo = calloc (diff, sizeof(struct servinfo));
+	sinfo = calloc(diff, sizeof(struct servinfo));
 	if (!sinfo) {
 		free(fdp); free(pfdp);
 		exit(1);
@@ -152,8 +150,7 @@ int main(int argc, char *argv[])
 
 	while(1) {
 		int len = 0, x = 0;
-		//ret = poll(pfd, NRSERV, -1);
-		ret = poll(pfdp, diff, -1);
+		ret = poll(pfdp, diff, 1000);
 		if (ret <= 0)
 			continue;
 		else {
@@ -164,17 +161,22 @@ int main(int argc, char *argv[])
 				len = recvfrom(fdp[x], buf, 100, 0, (struct sockaddr*)&tmpclient, (socklen_t*)&l);
 				if (len > 0) {
 					if (sinfo[x].flags == 2) {
-					   if ((sinfo[x].caddr[0].sin_port == tmpclient.sin_port) && (sinfo[x].caddr[0].sin_addr.s_addr == tmpclient.sin_addr.s_addr))
+					   if ((sinfo[x].caddr[0].sin_port == tmpclient.sin_port) && (sinfo[x].caddr[0].sin_addr.s_addr == tmpclient.sin_addr.s_addr)) {
 							len = sendto(fdp[x], buf, len, MSG_DONTWAIT, (const struct sockaddr*)&sinfo[x].caddr[1], l);
 							if (len < 1)
 								printf("Failed to sent client[1]:%d\n", errno);
-					   if ((sinfo[x].caddr[1].sin_port == tmpclient.sin_port) && (sinfo[x].caddr[1].sin_addr.s_addr == tmpclient.sin_addr.s_addr))
+							continue;
+					   }
+
+					   if ((sinfo[x].caddr[1].sin_port == tmpclient.sin_port) && (sinfo[x].caddr[1].sin_addr.s_addr == tmpclient.sin_addr.s_addr)) {
 							len = sendto(fdp[x], buf, len, MSG_DONTWAIT, (const struct sockaddr*)&sinfo[x].caddr[0], l);
 							if (len < 1)
 								printf("Failed to sent client[0]:%d\n", errno);
+							continue;
+					   }
 					}
 
-					if (sinfo[x].flags == 0)	{
+					if (sinfo[x].flags == 0) {
 						sinfo[x].caddr[0].sin_family = tmpclient.sin_family;
 						sinfo[x].caddr[0].sin_port = tmpclient.sin_port;		// binding port
 						sinfo[x].caddr[0].sin_addr.s_addr = tmpclient.sin_addr.s_addr;	// interface

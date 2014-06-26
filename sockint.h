@@ -11,8 +11,6 @@
 #include <string.h>
 #include <errno.h>
 
-#define	NRSERV	100
-
 struct servinfo {
 	struct sockaddr_in saddr, caddr[2];
 	int flags;

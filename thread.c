@@ -9,28 +9,30 @@
  */
 void release_port(char *port)
 {
-	int idx;
+	int idx, p;
 
 	/* as soon as some port is available that means we're ready to take calls */
 	if (active > portrange)
 		active = portrange-1;
 	else
 		active--;
+	
+	p = atoi(port);
+	idx = p - startport;	/* idx is index of port */
+	fprintf(stdout,"Port %s:%d released\n", port, idx);
 
-	idx = 0;
-	while ((freeports[idx] != -1) && idx <= portrange)
+	freeports[idx] = p;
+	sinfo[idx].flags = 0;	/* reset the servinfo flags */
+
+	/*while ((freeports[idx] != -1) && idx <= portrange)
 		idx++;
 
-	/* this never shouldn't happen ! */
 	if (idx == portrange && freeports[idx] != -1) {
 		fprintf(stderr, "Failed to release port.\n");
 		return;
-	}
+	} */
 
-	freeports[idx] = atoi(port);
 	freeidx = idx;			/* freeidx is a sortof cache-ing ports */
-
-	fprintf(stdout,"Port %s released\n", port);
 }
 
 int get_port(void)
@@ -48,6 +50,7 @@ int get_port(void)
 		freeports[preidx] = -1;
 		return port;
 	}
+
 	preidx = 0;
 	while (freeports[preidx] == -1)
 		preidx++;
