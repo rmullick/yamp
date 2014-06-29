@@ -4,7 +4,7 @@
 
 /*
  * Currently to port acquire/release is done via linear traversing over
- * the free list. So, if no of portrange is big, it might suffer.
+ * the free port lists. So, if no of portrange is big, it might suffer.
  * Might need attention for that purpose.
  */
 void release_port(char *port)
@@ -23,16 +23,7 @@ void release_port(char *port)
 
 	freeports[idx] = p;
 	sinfo[idx].flags = 0;	/* reset the servinfo flags */
-
-	/*while ((freeports[idx] != -1) && idx <= portrange)
-		idx++;
-
-	if (idx == portrange && freeports[idx] != -1) {
-		fprintf(stderr, "Failed to release port.\n");
-		return;
-	} */
-
-	freeidx = idx;			/* freeidx is a sortof cache-ing ports */
+	freeidx = idx;		/* freeidx is a sortof cache-ing ports */
 }
 
 int get_port(void)
@@ -118,14 +109,13 @@ static void *helper_routine(void *info)
 	memset(&tpfd, 0, sizeof(struct pollfd));
 	tpfd.fd = daemonfd; tpfd.events = POLLIN;
 
-	for(;;) {
+	for (;;) {
 		ret = poll(&tpfd, 1, -1);
 		if (ret <= 0)
 			continue;
 		else {
-			if (tpfd.revents & POLLIN) {
-					handle_command(daemonfd);
-			}
+			if (tpfd.revents & POLLIN)
+				handle_command(daemonfd);
 		}
 	}
 }

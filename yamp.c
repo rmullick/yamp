@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	startport = 0; endport = freeidx = active = portrange = 0;
 
 	while ((opt = getopt(argc, argv, "e:s:")) != -1) {
-		switch(opt) {
+		switch (opt) {
 			case 's':
 				startport = atoi(optarg);
 				break;
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 
 	if (prepare_helper()) {
 		fprintf(stderr, "Failed to create daemon thread\n");
-		inthandler(0);
+		inthandler(1);
 		goto exit;
 	}
 
@@ -144,6 +144,9 @@ int main(int argc, char *argv[])
 
 	/* Install the signal handlers */
 	signal(SIGINT, inthandler);
+	signal(SIGTERM, inthandler);
+	signal(SIGQUIT, inthandler);
+
 	portrange = endport - startport;
 
 	printf("Listening on %u.\n", portrange);
