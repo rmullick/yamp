@@ -10,6 +10,7 @@
 #include <poll.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 struct servinfo {
 	struct sockaddr_in saddr, caddr[2];

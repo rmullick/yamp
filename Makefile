@@ -1,13 +1,17 @@
-all:	yamp
+CC=gcc
+CFLAGS=-c -Wall
+SOURCES=thread.c sockint.c yamp.c
+LDFLAGS=-lpthread
+OBJECTS=$(SOURCES:.c=.o)
+EXECUTABLE=yamp
 
-thread: 
-	gcc -c thread.c
+all: $(SOURCES) $(EXECUTABLE)
 
-sockint: 
-	gcc -c sockint.c
+$(EXECUTABLE):$(OBJECTS)
+	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
 
-yamp:   sockint.o thread.o
-	gcc -g3 -o yamp thread.o sockint.o yamp.c -lpthread
+.c.o:
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
 	rm -rf *o *~ yamp

@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 	if (prepare_helper()) {
 		fprintf(stderr, "Failed to create daemon thread\n");
 		inthandler(1);
-		goto exit;
+		exit(1);
 	}
 
 	for (i = 0 ; i < diff; i++) {
@@ -209,5 +209,4 @@ int main(int argc, char *argv[])
 		     }
 		}
 	}
-exit:;
 }

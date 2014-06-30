@@ -1,6 +1,7 @@
 #include "thread.h"
 #include "sockint.h"
 #include <signal.h>
+#include <stdlib.h>
 
 /*
  * Currently to port acquire/release is done via linear traversing over
@@ -97,13 +98,13 @@ inline void handle_command(int tfd)
 
 static void *helper_routine(void *info)
 {
-	int signal, ret, daemonfd;
+	int ret, daemonfd;
 	struct pollfd tpfd;
 	struct sockaddr_in daemonserv;
 
 	if (udp_open(&daemonfd, &daemonserv, 4444) == -1) {
 		fprintf(stderr,"Failed to create daemon. Exiting...\n");
-		return;
+		return NULL;
 	}
 
 	memset(&tpfd, 0, sizeof(struct pollfd));
