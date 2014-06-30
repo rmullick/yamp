@@ -58,9 +58,8 @@ void initports(int nr)
 		exit(1);
 	}
 
-	for (x = 0; x < nr; x++) {
+	for (x = 0; x < nr; x++)
 		freeports[x] = startport + x;
-	}
 
 	freeidx = 0;
 }
@@ -74,6 +73,48 @@ void inthandler(int sig)
 	free(sinfo);
 	free(freeports);
 	exit(1);
+}
+
+static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient, socklen_t l, char *buf, int size)
+{
+	unsigned short port1, port2;
+	port1 = sinfo[x].caddr[0].sin_port;
+	port2 = sinfo[x].caddr[1].sin_port;
+
+	if (sinfo[x].flags == 2) {
+		if ((port1 == tmpclient->sin_port) && (sinfo[x].caddr[0].sin_addr.s_addr == tmpclient->sin_addr.s_addr)) {
+			size = sendto(fdp[x], buf, size, 0, (const struct sockaddr*)&sinfo[x].caddr[1], l);
+			if (size < 1)
+				printf("Failed to sent client[1]:%d\n", errno);
+			return;
+		}
+
+		if ((port2 == tmpclient->sin_port) && (sinfo[x].caddr[1].sin_addr.s_addr == tmpclient->sin_addr.s_addr)) {
+			size = sendto(fdp[x], buf, size, 0, (const struct sockaddr*)&sinfo[x].caddr[0], l);
+			if (size < 1)
+				printf("Failed to sent client[0]:%d\n", errno);
+			return;
+		}
+	}
+
+	/* TODO: Check for valid RTP packet is required. If no rtp packet dont update client address info */
+	if (sinfo[x].flags == 0) {
+		sinfo[x].caddr[0].sin_family = tmpclient->sin_family;
+		sinfo[x].caddr[0].sin_port = tmpclient->sin_port;		// binding port
+		sinfo[x].caddr[0].sin_addr.s_addr = tmpclient->sin_addr.s_addr;	// interface
+		sinfo[x].flags++;
+		return;
+	}
+
+	if (sinfo[x].flags == 1) {
+		if ((tmpclient->sin_port == port1) && (tmpclient->sin_addr.s_addr == sinfo[x].caddr[0].sin_addr.s_addr))
+			return;
+		sinfo[x].caddr[1].sin_family = tmpclient->sin_family;
+		sinfo[x].caddr[1].sin_port = tmpclient->sin_port;		// binding port
+		sinfo[x].caddr[1].sin_addr.s_addr = tmpclient->sin_addr.s_addr;	// interface
+		sinfo[x].flags++;
+		return;
+	}
 }
 
 int main(int argc, char *argv[])
@@ -162,41 +203,8 @@ int main(int argc, char *argv[])
 			struct sockaddr_in tmpclient = {.sin_family = AF_INET, .sin_port = 0, .sin_addr.s_addr = 0};
 			if (pfdp[x].revents & POLLIN) {
 				len = recvfrom(fdp[x], buf, 100, 0, (struct sockaddr*)&tmpclient, (socklen_t*)&l);
-				if (len > 0) {
-					if (sinfo[x].flags == 2) {
-					   if ((sinfo[x].caddr[0].sin_port == tmpclient.sin_port) && (sinfo[x].caddr[0].sin_addr.s_addr == tmpclient.sin_addr.s_addr)) {
-							len = sendto(fdp[x], buf, len, MSG_DONTWAIT, (const struct sockaddr*)&sinfo[x].caddr[1], l);
-							if (len < 1)
-								printf("Failed to sent client[1]:%d\n", errno);
-							continue;
-					   }
-
-					   if ((sinfo[x].caddr[1].sin_port == tmpclient.sin_port) && (sinfo[x].caddr[1].sin_addr.s_addr == tmpclient.sin_addr.s_addr)) {
-							len = sendto(fdp[x], buf, len, MSG_DONTWAIT, (const struct sockaddr*)&sinfo[x].caddr[0], l);
-							if (len < 1)
-								printf("Failed to sent client[0]:%d\n", errno);
-							continue;
-					   }
-					}
-
-					if (sinfo[x].flags == 0) {
-						sinfo[x].caddr[0].sin_family = tmpclient.sin_family;
-						sinfo[x].caddr[0].sin_port = tmpclient.sin_port;		// binding port
-						sinfo[x].caddr[0].sin_addr.s_addr = tmpclient.sin_addr.s_addr;	// interface
-						sinfo[x].flags++;
-						continue;
-					}
-
-					if (sinfo[x].flags == 1) {
-					   if ((tmpclient.sin_port == sinfo[x].caddr[0].sin_port) && (tmpclient.sin_addr.s_addr == sinfo[x].caddr[0].sin_addr.s_addr))
-						          continue;
-						sinfo[x].caddr[1].sin_family = tmpclient.sin_family;
-						sinfo[x].caddr[1].sin_port = tmpclient.sin_port;		// binding port
-						sinfo[x].caddr[1].sin_addr.s_addr = tmpclient.sin_addr.s_addr;	// interface
-						sinfo[x].flags++;
-						continue;
-					}
-				}
+				if (len > 0)
+					update_sinfo(x, &tmpclient, l, buf, len);
 			  }
 		     }
 		}
