@@ -86,10 +86,9 @@ inline void handle_command(int tfd)
 		if (pass) {
 			do {
 				len = sendto(tfd, newbuf, 10, MSG_DONTWAIT, (const struct sockaddr*)&taddr, (socklen_t) l);
-				if (len <= 0) {
-					//fprintf(stdout,"failed to sent: %d\n", errno);
+				if (len <= 0)
 					repeat++;
-				} else
+				else
 					break;
 			} while (repeat < 3);
 		}

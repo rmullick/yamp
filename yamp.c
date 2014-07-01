@@ -4,13 +4,13 @@
  * Licensed under GPLv2 or later.
  */
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <signal.h>
 #include "sockint.h"
 #include "thread.h"
+#include "rtp.h"
 
 void show_usages(void)
 {
@@ -75,7 +75,7 @@ void inthandler(int sig)
 	exit(1);
 }
 
-static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient, socklen_t l, char *buf, int size)
+static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient, socklen_t l, unsigned char *buf, int size)
 {
 	unsigned short port1, port2;
 	port1 = sinfo[x].caddr[0].sin_port;
@@ -97,8 +97,9 @@ static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient
 		}
 	}
 
-	/* TODO: Check for valid RTP packet is required. If no rtp packet dont update client address info */
 	if (sinfo[x].flags == 0) {
+		if (!check_rtp(buf))
+			return;
 		sinfo[x].caddr[0].sin_family = tmpclient->sin_family;
 		sinfo[x].caddr[0].sin_port = tmpclient->sin_port;		// binding port
 		sinfo[x].caddr[0].sin_addr.s_addr = tmpclient->sin_addr.s_addr;	// interface
@@ -108,6 +109,8 @@ static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient
 
 	if (sinfo[x].flags == 1) {
 		if ((tmpclient->sin_port == port1) && (tmpclient->sin_addr.s_addr == sinfo[x].caddr[0].sin_addr.s_addr))
+			return;
+		if (!check_rtp(buf))
 			return;
 		sinfo[x].caddr[1].sin_family = tmpclient->sin_family;
 		sinfo[x].caddr[1].sin_port = tmpclient->sin_port;		// binding port
@@ -199,7 +202,7 @@ int main(int argc, char *argv[])
 			continue;
 		else {
 		      for (x = 0; x < diff; x++) {
-			char buf[100] = {0};
+			unsigned char buf[100] = {0};
 			struct sockaddr_in tmpclient = {.sin_family = AF_INET, .sin_port = 0, .sin_addr.s_addr = 0};
 			if (pfdp[x].revents & POLLIN) {
 				len = recvfrom(fdp[x], buf, 100, 0, (struct sockaddr*)&tmpclient, (socklen_t*)&l);

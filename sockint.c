@@ -43,4 +43,3 @@ int udp_open(int *fd, struct sockaddr_in *addr, int port)
 
 	return 0;
 }
-

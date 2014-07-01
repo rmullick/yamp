@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-c -Wall
-SOURCES=thread.c sockint.c yamp.c
+SOURCES=thread.c sockint.c rtp.c yamp.c
 LDFLAGS=-lpthread
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=yamp
