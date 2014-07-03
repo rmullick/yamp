@@ -98,10 +98,10 @@ static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient
 	}
 
 	if (sinfo[x].flags == 0) {
-		/*if (!check_rtp(buf)) {
-			fprintf(stdout,"RTP check fails\n");
+		if (!check_rtp(buf)) {
+			//fprintf(stdout,"RTP check fails\n");
 			return;
-		}*/
+		}
 		sinfo[x].caddr[0].sin_family = tmpclient->sin_family;
 		sinfo[x].caddr[0].sin_port = tmpclient->sin_port;		// binding port
 		sinfo[x].caddr[0].sin_addr.s_addr = tmpclient->sin_addr.s_addr;	// interface
@@ -112,10 +112,10 @@ static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient
 	if (sinfo[x].flags == 1) {
 		if ((tmpclient->sin_port == port1) && (tmpclient->sin_addr.s_addr == sinfo[x].caddr[0].sin_addr.s_addr))
 			return;
-		/*if (!check_rtp(buf)) {
-			fprintf(stdout,"RTP check fails\n");
+		if (!check_rtp(buf)) {
+			//fprintf(stdout,"RTP check fails\n");
 			return;
-		}*/
+		}
 		sinfo[x].caddr[1].sin_family = tmpclient->sin_family;
 		sinfo[x].caddr[1].sin_port = tmpclient->sin_port;		// binding port
 		sinfo[x].caddr[1].sin_addr.s_addr = tmpclient->sin_addr.s_addr;	// interface
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 	while(1) {
 		int len = 0, x = 0;
 		ret = poll(pfdp, diff, 1000);
-		if (ret <= 0)
+		if (ret < 0)
 			continue;
 		else {
 		      for (x = 0; x < diff; x++) {
@@ -226,7 +226,6 @@ int main(int argc, char *argv[])
 					sprintf(port, "%d", p);
 					fprintf(stdout,"Releasing port %d due to timeout: %d\n", p, sinfo[x].tcount);
 					release_port(port);
-					memset(&sinfo[x], 0, sizeof(struct servinfo));
 				}
 			  }
 		     }

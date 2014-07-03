@@ -18,7 +18,7 @@ void showfreeports(void)
  */
 void release_port(char *port)
 {
-	int idx, p;
+	unsigned int idx, p;
 
 	/* as soon as some port is available that means we're ready to take calls */
 	if (active > portrange/2)
