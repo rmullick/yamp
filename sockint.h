@@ -12,9 +12,12 @@
 #include <errno.h>
 #include <unistd.h>
 
+#define	TIMEOUT	60
+#define	BUFSIZE 2048
+
 struct servinfo {
 	struct sockaddr_in saddr, caddr[2];
-	int flags;
+	int flags, tcount;
 };
 
 struct pollfd *pfdp;

@@ -3,6 +3,14 @@
 #include <signal.h>
 #include <stdlib.h>
 
+void showfreeports(void)
+{
+	int i;
+
+	for (i = 0; i < portrange; i++)
+		fprintf(stdout,"%d\n", freeports[i]);
+}
+
 /*
  * Currently to port acquire/release is done via linear traversing over
  * the free port lists. So, if no of portrange is big, it might suffer.
@@ -13,7 +21,7 @@ void release_port(char *port)
 	int idx, p;
 
 	/* as soon as some port is available that means we're ready to take calls */
-	if (active > portrange)
+	if (active > portrange/2)
 		active = portrange-1;
 	else
 		active--;
@@ -23,6 +31,7 @@ void release_port(char *port)
 	fprintf(stdout,"Port %s:%d released\n", port, idx);
 
 	freeports[idx] = p;
+	sinfo[idx].tcount = 0;
 	sinfo[idx].flags = 0;	/* reset the servinfo flags */
 	freeidx = idx;		/* freeidx is a sortof cache-ing ports */
 }
@@ -31,7 +40,7 @@ int get_port(void)
 {
 	int preidx, port;
 
-	if (active >= portrange)
+	if (active >= portrange/2)
 		return -1;
 	else
 		active++;
@@ -45,7 +54,7 @@ int get_port(void)
 
 	preidx = 0;
 	while (freeports[preidx] == -1)
-		preidx++;
+		preidx += 2;
 
 	freeidx = preidx;
 
@@ -67,6 +76,11 @@ inline void handle_command(int tfd)
 	else {
 		int pass = 0;
 		buf[len] = 0;
+
+		if (buf[0] == 'S') {
+			showfreeports();
+			return;
+		}
 
 		if (buf[0] == 'D' || buf[0] == 'd') {
 			release_port(&buf[4]);
