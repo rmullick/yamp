@@ -98,10 +98,9 @@ static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient
 	}
 
 	if (sinfo[x].flags == 0) {
-		if (!check_rtp(buf)) {
-			//fprintf(stdout,"RTP check fails\n");
+		if (!check_rtp(buf))
 			return;
-		}
+
 		sinfo[x].caddr[0].sin_family = tmpclient->sin_family;
 		sinfo[x].caddr[0].sin_port = tmpclient->sin_port;		// binding port
 		sinfo[x].caddr[0].sin_addr.s_addr = tmpclient->sin_addr.s_addr;	// interface
@@ -112,10 +111,10 @@ static void inline update_sinfo(const int x, const struct sockaddr_in *tmpclient
 	if (sinfo[x].flags == 1) {
 		if ((tmpclient->sin_port == port1) && (tmpclient->sin_addr.s_addr == sinfo[x].caddr[0].sin_addr.s_addr))
 			return;
-		if (!check_rtp(buf)) {
-			//fprintf(stdout,"RTP check fails\n");
+
+		if (!check_rtp(buf))
 			return;
-		}
+
 		sinfo[x].caddr[1].sin_family = tmpclient->sin_family;
 		sinfo[x].caddr[1].sin_port = tmpclient->sin_port;		// binding port
 		sinfo[x].caddr[1].sin_addr.s_addr = tmpclient->sin_addr.s_addr;	// interface
@@ -219,12 +218,11 @@ int main(int argc, char *argv[])
 			if (!(x % 2) && sinfo[x].flags == 2) {
 				if (sinfo[x].tcount < TIMEOUT)
 					sinfo[x].tcount++;
-				else {	/* Make this fd available */
+				else {	/* Make this port available */
 					int p;
 					char port[10] = {0};
 					p = ntohs(sinfo[x].saddr.sin_port);
 					sprintf(port, "%d", p);
-					fprintf(stdout,"Releasing port %d due to timeout: %d\n", p, sinfo[x].tcount);
 					release_port(port);
 				}
 			  }
