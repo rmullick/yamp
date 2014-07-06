@@ -19,3 +19,6 @@ make sure it's installed. To run:
 
 by using "-s" and "-e" option, a portrange is defined. For ex, if you want to
 use port 30000-35000, then do: "./yamp -s 30000 -e 35000".
+
+NOTE: these port ranges will be opened up as yamp starts and won't be able to
+use for any other purpose.

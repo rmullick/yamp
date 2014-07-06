@@ -77,13 +77,16 @@ inline void handle_command(int tfd)
 		int pass = 0;
 		buf[len] = 0;
 
+		/* This is only for testing purpose, to be removed later */
 		if (buf[0] == 'S') {
 			showfreeports();
 			return;
 		}
 
 		if (buf[0] == 'D' || buf[0] == 'd') {
+			pthread_mutex_lock(&releaseport);
 			release_port(&buf[4]);
+			pthread_mutex_unlock(&releaseport);
 			return;
 		}
 

@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall
+CFLAGS=-c -Wall -O2
 SOURCES=thread.c sockint.c rtp.c yamp.c
 LDFLAGS=-lpthread
 OBJECTS=$(SOURCES:.c=.o)

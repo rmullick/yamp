@@ -12,6 +12,8 @@
 #include "thread.h"
 #include "rtp.h"
 
+pthread_mutex_t releaseport = PTHREAD_MUTEX_INITIALIZER;
+
 void show_usages(void)
 {
 	fprintf(stderr, "Usages: ./progname -s startport -e endport\n");
@@ -223,7 +225,9 @@ int main(int argc, char *argv[])
 					char port[10] = {0};
 					p = ntohs(sinfo[x].saddr.sin_port);
 					sprintf(port, "%d", p);
+					pthread_mutex_lock(&releaseport);
 					release_port(port);
+					pthread_mutex_unlock(&releaseport);
 				}
 			  }
 		     }
