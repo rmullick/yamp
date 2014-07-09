@@ -3,7 +3,7 @@
 
 Yate Another MediaProxy, YAMP for short, is RTPproxy alike software intend to
 work with Kamailio (or any other flavour OpenSER available, wasn't tested with
-any other OpenSEr flavours except Kamailio, ATM). To fully make it working a
+any other OpenSEr flavours except Kamailio, atm). To fully make it working a
 module in Kamailio is needed (currently it's named as gplexrtp). gplexrtp
 communicates with YAMP via network stack, Local Communication isn't available
 at the moment.

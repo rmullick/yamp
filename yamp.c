@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
 
 	startport = 0; endport = freeidx = active = portrange = 0;
 
+	/* e, s both are essential, no default portrange atm */
 	while ((opt = getopt(argc, argv, "e:s:")) != -1) {
 		switch (opt) {
 			case 's':
@@ -150,13 +151,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (endport >= startport) 
+	if (endport >= startport)
 		diff = (endport - startport);
 	else
 		show_usages();
-
+	
 	checklimit(diff);
-
+	
 	fdp = allocfds(diff);
 	pfdp = allocpfdp(diff);
 	if (!pfdp) {
@@ -217,17 +218,19 @@ int main(int argc, char *argv[])
 				}
 			}
 
+			/* issue of flags == 2 is, if for some reason call failed to establish
+			 * flags will remain 0 and the following code block will not reach, therefore
+			 * acquired port will not be realeased, this issue needs to be fixed */
 			if (!(x % 2) && sinfo[x].flags == 2) {
 				if (sinfo[x].tcount < TIMEOUT)
 					sinfo[x].tcount++;
 				else {	/* Make this port available */
 					int p;
-					char port[10] = {0};
 					p = ntohs(sinfo[x].saddr.sin_port);
-					sprintf(port, "%d", p);
 					pthread_mutex_lock(&releaseport);
-					release_port(port);
+					release_port(p);
 					pthread_mutex_unlock(&releaseport);
+					sinfo[x].tcount = 0;
 				}
 			  }
 		     }

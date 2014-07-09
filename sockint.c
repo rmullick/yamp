@@ -1,3 +1,8 @@
+/*
+ * This file is basically a helper to accomplish common
+ * tasks.
+ */
+
 #include "sockint.h"
 
 void nonblock(int *fd)

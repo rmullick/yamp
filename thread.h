@@ -4,7 +4,7 @@
 #include <pthread.h>
 
 int prepare_helper(void);
-void release_port(char *port);
+void release_port(int port);
 
 extern pthread_mutex_t releaseport;
 

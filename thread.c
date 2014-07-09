@@ -16,7 +16,7 @@ void showfreeports(void)
  * the free port lists. So, if no of portrange is big, it might suffer.
  * Might need attention for that purpose.
  */
-void release_port(char *port)
+void release_port(int port)
 {
 	unsigned int idx, p;
 
@@ -26,9 +26,9 @@ void release_port(char *port)
 	else
 		active--;
 	
-	p = atoi(port);
+	p = port;
 	idx = p - startport;	/* idx is index of port */
-	fprintf(stdout,"Port %s:%d released\n", port, idx);
+	fprintf(stdout,"Port %d:%d released\n", port, idx);
 
 	freeports[idx] = p;
 	sinfo[idx].tcount = 0;
@@ -47,7 +47,9 @@ int get_port(void)
 
 	preidx = freeidx;
 	if (freeports[freeidx] != -1) {
+		sinfo[preidx].tcount = 0;
 		port = freeports[preidx];
+		sinfo[preidx].tcount = 0;
 		freeports[preidx] = -1;
 		return port;
 	}
@@ -59,14 +61,14 @@ int get_port(void)
 	freeidx = preidx;
 
 	port = freeports[preidx];
-	freeports[preidx] = -1;		/* Not avaiable anymore */
+	freeports[preidx] = -1;	/* Not avaiable anymore */
 
 	return port;
 }
 
 inline void handle_command(int tfd)
 {
-	int l = sizeof(struct sockaddr_in), len = 0, port, repeat = 0;
+	int l = sizeof(struct sockaddr_in), len = 0, repeat = 0;
 	struct sockaddr_in taddr;
 	char buf[15] = {0}, newbuf[15] = "port:0000000000";
 
@@ -74,7 +76,7 @@ inline void handle_command(int tfd)
 	if (len <= 0)
 		return;
 	else {
-		int pass = 0;
+		int pass = 0, port;
 		buf[len] = 0;
 
 		/* This is only for testing purpose, to be removed later */
@@ -83,9 +85,11 @@ inline void handle_command(int tfd)
 			return;
 		}
 
+		/* Current deletion format is: DEL:portno */
 		if (buf[0] == 'D' || buf[0] == 'd') {
+			port = atoi(&buf[4]);
 			pthread_mutex_lock(&releaseport);
-			release_port(&buf[4]);
+			release_port(port);
 			pthread_mutex_unlock(&releaseport);
 			return;
 		}
