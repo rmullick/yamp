@@ -1,8 +1,15 @@
+/*
+ * This is a helper thread, which does the talking accepts
+ * requests from sip-servers and act accordingly, i.e get/release
+ * ports.
+ */
+
 #include "thread.h"
 #include "sockint.h"
 #include <signal.h>
 #include <stdlib.h>
 
+/* Only for some debugging purposes, will be removed later */
 void showfreeports(void)
 {
 	int i;

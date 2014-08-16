@@ -1,5 +1,5 @@
 /*
- * Meant to be a simple mediaproxy.
+ * Meant to be a simple mediaproxy for testing kamailio module.
  * Developed by Md. Rakib Hassan Mullick <rakib.mullick@gmail.com>
  * Licensed under GPLv2 or later.
  */
@@ -230,7 +230,6 @@ int main(int argc, char *argv[])
 					pthread_mutex_lock(&releaseport);
 					release_port(p);
 					pthread_mutex_unlock(&releaseport);
-					sinfo[x].tcount = 0;
 				}
 			  }
 		     }

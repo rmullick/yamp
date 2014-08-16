@@ -8,7 +8,7 @@ module in Kamailio is needed (currently it's named as gplexrtp). gplexrtp
 communicates with YAMP via network stack, Local Communication isn't available
 at the moment.
 
-YAMP uses single port for proxying rtp media. Currently, it don't try to check
+YAMP uses single port for proxying rtp media. Currently, it only try to check
 whether it's a real rtp media or not. Part of it's working depends on the gplexrtp
 module.
 
@@ -22,3 +22,5 @@ use port 30000-35000, then do: "./yamp -s 30000 -e 35000".
 
 NOTE: these port ranges will be opened up as yamp starts and won't be able to
 use for any other purpose.
+
+TODO: 1) Make it a deamon; 2) Implement various logging option instead of printf.
